@@ -1,28 +1,20 @@
-// authMiddleware.js
-import jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
+import { UNAUTHORIZED } from  "../constants/httpstatus.js"
 import { ApiError } from '../utils/ApiError.js';
 
-const authMiddleware = (req, res, next) => {
-  // Extract the token from the request headers, assuming it's present in the "Authorization" header
-  const token = req.headers.authorization;
-
+const authenticate = async (req, res, next) => {
+  const token = req.headers.access_token;
   if (!token) {
-    return next(new ApiError(401, 'Unauthorized - Token not provided'));
+    throw new ApiError(UNAUTHORIZED, 'Unauthorized - Token not provided');
   }
 
-  // Verify the token and extract the user ID
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return next(new ApiError(401, 'Unauthorized - Invalid token'));
-    }
-
-    // Attach the user ID to the request object for further use
-    req.user = {
-      id: decoded.userId,
-    };
-
+  try {
+    const decoded = await verify(token);
+    req.user = decoded;
     next();
-  });
+  } catch (error) {
+    throw new ApiError(UNAUTHORIZED, 'Unauthorized - Invalid token', [], error.stack);
+  }
 };
 
-export { authMiddleware };
+export default authenticate;

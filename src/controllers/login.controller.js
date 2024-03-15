@@ -1,25 +1,37 @@
-// login.controller.js
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiError } from '../utils/ApiError.js';
-import { Auth } from '../models/Models/Auth.Models.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
+import { Login } from '../models/Models/Login.Models.js'; // Assuming the correct path to the Login model
+import { BAD_REQUEST } from  '../constants/httpstatus.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+// Login
+const login = asyncHandler(async (req, res) => {
+  try {
+    const { contact, pass } = req.body;
+    const loginData = await Login.findOne({ $or: [{ mail: contact }, { pass: contact }] }).populate('userId');
 
-  const user = await Auth.findOne({ email });
+    if (!loginData) {
+      throw new ApiError(BAD_REQUEST, 'User not found');
+    }
 
-  if (!user || !(await user.isPasswordCorrect(password))) {
-    throw new ApiError(401, 'Invalid email or password');
+    const { userId, mail, pass: hashedPassword } = loginData;
+
+    // Check password
+    const isPasswordMatch = await bcrypt.compare(pass, hashedPassword);
+    if (!isPasswordMatch) {
+      throw new ApiError(BAD_REQUEST, 'Incorrect password');
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+    res.json(new ApiResponse(200, { token, userId, mail }));
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(error.statusCode || 500).json(new ApiResponse(error.statusCode || 500, null, error.message));
   }
-
-  // If login is successful, generate a token using MongoDB's _id as userId
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-
-  return res.status(200).json(
-    new ApiResponse(200, { token }, 'User Logged In Successfully')
-  );
 });
 
-export { loginUser };
+export { login };

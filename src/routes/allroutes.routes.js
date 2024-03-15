@@ -16,7 +16,7 @@ router.route("/login").post(loginUser)
 router.route('/products').post( upload.single('image'), storeProducts);
 router.route('/cart/add').post(authMiddleware,addToCart);
 router.route('/cart/:userId').get(authMiddleware,getCartItems);
-router.post('/address', addAddress);
+//router.post('/address', addAddress);
 
 
 
