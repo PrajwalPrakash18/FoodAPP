@@ -3,23 +3,25 @@ import { Product } from './Products.Models.js';
 import { Address } from './Address.Models.js';
 
 const productSchema = new mongoose.Schema({
-  productId: {
-    type: String,
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
     required: true,
   },
   quantity: {
     type: Number,
     required: true,
   },
-  cost: {
+  totalPrice: {
     type: Number,
-    required: Product.price,
+    required: true,
   },
 });
 
 const orderSchema = new mongoose.Schema({
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   products: [productSchema],
@@ -32,7 +34,14 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  address : {type : Address.schema} ,
+  totalAmount: {
+    type: Number,
+    required: true,
+  },
+  address: {
+    type: Address.schema,
+    required: true,
+  },
 }, { timestamps: true });
 
 export const Order = mongoose.model('Order', orderSchema);

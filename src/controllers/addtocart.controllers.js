@@ -1,38 +1,40 @@
-import { ApiError } from "../utils/ApiError.js";
-import AddToCart from "../models/Models/AddtoCart.models.js"
-import {Order} from "../models/Models/Ordersummary.Models.js"
+import AddToCart from '../models/Models/AddtoCart.models.js';
+import { ApiError } from '../utils/ApiError.js';
 
 const addToCart = async (req, res) => {
   try {
-    const { userId, products } = req.body;
+    const { userId, productId, quantity } = req.body;
 
-    if (!userId || !products || typeof products !== 'object') {
-      throw new ApiError(400, 'Invalid cart data');
+    // Validate input data
+    if (!userId || !productId || !quantity || quantity < 1) {
+      throw new ApiError(400, 'Invalid input data');
     }
 
-    const cart = await Order.findOne({ userId });
+    // Add the product to the user's cart
+    let cart = await AddToCart.findOne({ userId });
     if (!cart) {
-      // Create a new cart if not found
-      const newCart = new Order({ userId, products });
-      await newCart.save();
+      cart = new AddToCart({ userId, products: [{ productId, quantity }] });
     } else {
-      // Update existing cart
-      await Promise.all(Object.keys(products).map(async (productId) => {
-        const quantity = products[productId];
-        const existingProduct = cart.products.find(item => item.productId.equals(productId));
-        if (existingProduct) {
-          existingProduct.quantity += quantity;
-        } else {
-          cart.products.push({ productId, quantity });
-        }
-      }));
-      await cart.save();
+      // Check if the product is already in the cart
+      const existingProductIndex = cart.products.findIndex(item => item.productId === productId);
+      if (existingProductIndex !== -1) {
+        // If the product exists, update the quantity
+        cart.products[existingProductIndex].quantity += quantity;
+      } else {
+        // If the product does not exist, add it to the cart
+        cart.products.push({ productId, quantity });
+      }
     }
-    res.status(200).json({ success: true, message: 'Products added to cart successfully' });
+
+    // Save the cart to the database
+    await cart.save();
+
+    res.status(200).json({ success: true, message: 'Product added to cart successfully' });
   } catch (error) {
-    console.error('Error adding products to cart:', error);
+    console.error('Error adding product to cart:', error);
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 };
+
 
 export { addToCart };
