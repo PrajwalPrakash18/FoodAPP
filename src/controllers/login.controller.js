@@ -7,7 +7,7 @@ import { BAD_REQUEST } from  '../constants/httpstatus.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 // Login
-const login = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   try {
     const { contact, pass } = req.body;
     const loginData = await Login.findOne({ $or: [{ mail: contact }, { pass: contact }] }).populate('userId');
@@ -34,4 +34,4 @@ const login = asyncHandler(async (req, res) => {
   }
 });
 
-export { login };
+export { loginUser };
