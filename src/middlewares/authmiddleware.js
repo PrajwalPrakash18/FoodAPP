@@ -1,4 +1,4 @@
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { UNAUTHORIZED } from  "../constants/httpstatus.js"
 import { ApiError } from '../utils/ApiError.js';
 
@@ -17,4 +17,4 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-export default authenticate;
+export  default authenticate;

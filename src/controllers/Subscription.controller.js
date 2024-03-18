@@ -1,5 +1,5 @@
 // subscription.controller.js
-import Subscription from '../models/subscription.model.js';
+import Subscription from '../models/Models/Subscription.Models.js';
 import { ApiError } from '../utils/ApiError.js';
 
 const createSubscription = async (req, res) => {

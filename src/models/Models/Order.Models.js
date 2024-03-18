@@ -5,7 +5,7 @@ import { OrderStatus } from "../../constants/orderStatus.js";
 
 export const OrderItemSchema = new Schema({
       food: {type:Product.schema, required :true},
-      price:{type:Number, required:True},
+      price:{type:Number, required:true},
       quantity: {type:Number, required:true } 
 },
 {

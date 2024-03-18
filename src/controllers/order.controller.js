@@ -1,8 +1,8 @@
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
-import { OrderSchema } from '../models/Order.Models.js'; // Assuming the correct path to the Order schema
+import { OrderSchema } from '../models/Models/Order.Models.js'; // Assuming the correct path to the Order schema
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { Product } from '../models/Products.Models.js'; // Assuming the correct path to the Product model
+import { Product } from '../models/Models/Products.Models.js'; // Assuming the correct path to the Product model
 import { BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR } from '../constants/httpstatus.js'; // Importing necessary constants
 
 const addToCart = asyncHandler(async (req, res) => {
