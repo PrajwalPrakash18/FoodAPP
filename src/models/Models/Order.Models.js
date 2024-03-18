@@ -1,4 +1,4 @@
-import {Schema , model, mongoose} from "mongoose"
+import {Schema , model} from "mongoose"
 import {Product} from "./Products.Models.js"
 import { OrderStatus } from "../../constants/orderStatus.js";
 

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { UNAUTHORIZED } from  "../constants/httpstatus.js"
+import { UNAUTHORIZED } from "../constants/httpstatus.js";
 import { ApiError } from '../utils/ApiError.js';
 
 const authenticate = async (req, res, next) => {
@@ -9,7 +9,7 @@ const authenticate = async (req, res, next) => {
   }
 
   try {
-    const decoded = await verify(token);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
     req.user = decoded;
     next();
   } catch (error) {
@@ -17,4 +17,4 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-export  default authenticate;
+export default authenticate;

@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { uploadonCloudinary } from '../utils/cloudinary.js';
 import { Product } from '../models/Models/Products.Models.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { BAD_REQUEST } from '../constants/httpstatus.js';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from '../constants/httpstatus.js';
 
 const storeProducts = asyncHandler(async (req, res) => {
   try {
@@ -14,9 +14,9 @@ const storeProducts = asyncHandler(async (req, res) => {
     }
 
     const savedProducts = await Promise.all(products.map(async (product) => {
-      const { name, price, imageurl, description, category } = product;
+      const { productid, name, price, imageurl, description, category } = product;
 
-      if (!name || !price || isNaN(price) || !imageurl || !description || !category) {
+      if (!productid || !name || !price || isNaN(price) || !imageurl || !description || !category) {
         throw new ApiError(BAD_REQUEST, 'Invalid product data');
       }
 
@@ -24,10 +24,11 @@ const storeProducts = asyncHandler(async (req, res) => {
       const cloudinaryInfo = await uploadonCloudinary(imageurl);
 
       if (!cloudinaryInfo || !cloudinaryInfo.secure_url) {
-        throw new ApiError(BAD_REQUEST, 'Error uploading image to Cloudinary');
+        throw new ApiError(INTERNAL_SERVER_ERROR, 'Error uploading image to Cloudinary');
       }
 
       const newProduct = await Product.create({
+        productid,
         name,
         price,
         imageurl: cloudinaryInfo.secure_url,
@@ -42,7 +43,7 @@ const storeProducts = asyncHandler(async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('Error storing products:', error);
-    res.status(error.statusCode || 500).json(new ApiResponse(error.statusCode || 500, null, error.message));
+    res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
   }
 });
 
