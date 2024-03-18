@@ -1,11 +1,12 @@
+// order.controller.js
+
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
-import { OrderSchema } from '../models/Models/Order.Models.js'; // Assuming the correct path to the Order schema
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { Product } from '../models/Models/Products.Models.js'; // Assuming the correct path to the Product model
-import { BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR } from '../constants/httpstatus.js'; // Importing necessary constants
+import { OrderSchema } from '../models/Models/Order.Models.js';
+import { Product } from '../models/Models/Products.Models.js';
+import { BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR } from '../constants/httpstatus.js';
 
-const addToCart = asyncHandler(async (req, res) => {
+const addToCart = async (req, res) => {
   try {
     const { userId, productId, quantity } = req.body;
 
@@ -52,94 +53,39 @@ const addToCart = asyncHandler(async (req, res) => {
     console.error('Error adding product to cart:', error);
     res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
   }
-});
+};
 
-const viewCart = asyncHandler(async (req, res) => {
+const placeOrder = async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    // Find the user's active cart
-    const cart = await OrderSchema.findOne({ user: userId, status: 'NEW' }).populate('items.food');
-
-    if (!cart) {
-      throw new ApiError(NOT_FOUND, 'Cart not found');
-    }
-
-    res.json(new ApiResponse(200, cart, 'Cart retrieved successfully'));
-  } catch (error) {
-    console.error('Error fetching cart:', error);
-    res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
-  }
-});
-
-const updateCart = asyncHandler(async (req, res) => {
-  try {
-    const { userId, itemId, quantity } = req.body;
-
-    // Validate input data
-    if (!userId || !itemId || !quantity || quantity < 1) {
-      throw new ApiError(BAD_REQUEST, 'Invalid input data');
-    }
+    const { userId, address } = req.body;
 
     // Find the user's active cart
     const cart = await OrderSchema.findOne({ user: userId, status: 'NEW' });
 
-    if (!cart) {
-      throw new ApiError(NOT_FOUND, 'Cart not found');
+    if (!cart || cart.items.length === 0) {
+      throw new ApiError(BAD_REQUEST, 'No items in the cart');
     }
 
-    // Find the item in the cart
-    const itemToUpdate = cart.items.find(item => item._id == itemId);
+    // Create a new order
+    const order = new OrderSchema({
+      user: userId,
+      items: cart.items,
+      totalPrice: cart.totalPrice,
+      address: address,
+      status: 'PLACED' // Update status to PLACED for placed orders
+    });
 
-    if (!itemToUpdate) {
-      throw new ApiError(NOT_FOUND, 'Item not found in cart');
-    }
+    // Save the order
+    await order.save();
 
-    // Update the item quantity and total price
-    const previousQuantity = itemToUpdate.quantity;
-    itemToUpdate.quantity = quantity;
-    cart.totalPrice += (quantity - previousQuantity) * itemToUpdate.food.price;
+    // Clear the user's cart
+    await cart.remove();
 
-    // Save the updated cart
-    await cart.save();
-
-    res.json(new ApiResponse(200, cart, 'Cart updated successfully'));
+    res.json(new ApiResponse(201, order, 'Order placed successfully'));
   } catch (error) {
-    console.error('Error updating cart:', error);
+    console.error('Error placing order:', error);
     res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
   }
-});
+};
 
-const removeItemFromCart = asyncHandler(async (req, res) => {
-  try {
-    const { userId, itemId } = req.body;
-
-    // Find the user's active cart
-    const cart = await OrderSchema.findOne({ user: userId, status: 'NEW' });
-
-    if (!cart) {
-      throw new ApiError(NOT_FOUND, 'Cart not found');
-    }
-
-    // Find the index of the item in the cart
-    const itemIndex = cart.items.findIndex(item => item._id == itemId);
-
-    if (itemIndex === -1) {
-      throw new ApiError(NOT_FOUND, 'Item not found in cart');
-    }
-
-    // Remove the item from the cart
-    const removedItem = cart.items.splice(itemIndex, 1)[0];
-    cart.totalPrice -= removedItem.price * removedItem.quantity;
-
-    // Save the updated cart
-    await cart.save();
-
-    res.json(new ApiResponse(200, cart, 'Item removed from cart successfully'));
-  } catch (error) {
-    console.error('Error removing item from cart:', error);
-    res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
-  }
-});
-
-export { addToCart, viewCart, updateCart, removeItemFromCart };
+export { addToCart, placeOrder };
