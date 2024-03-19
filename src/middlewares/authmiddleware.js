@@ -10,7 +10,7 @@ const authenticate = async (req, res, next) => {
 
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decoded;
+    req.userId = decoded.userId; // Store only the user ID in the request object
     next();
   } catch (error) {
     throw new ApiError(UNAUTHORIZED, 'Unauthorized - Invalid token', [], error.stack);
