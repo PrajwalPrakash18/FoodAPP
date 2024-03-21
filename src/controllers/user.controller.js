@@ -17,7 +17,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (existingUser) {
       throw new ApiError(409, "User with the same username or email already exists");
     }
-
+    console.log(req.body)
     // Creating the user
     const newUser = await Auth.create({
       user: user.toLowerCase(),
@@ -25,6 +25,8 @@ const registerUser = asyncHandler(async (req, res) => {
       email,
       password
     });
+
+
 
     if (!newUser) {
       throw new ApiError(500, "Failed to register user");

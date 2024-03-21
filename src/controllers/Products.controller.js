@@ -45,6 +45,6 @@ const storeProducts = asyncHandler(async (req, res) => {
     console.error('Error storing products:', error);
     res.status(error.statusCode || INTERNAL_SERVER_ERROR).json(new ApiResponse(error.statusCode || INTERNAL_SERVER_ERROR, null, error.message));
   }
-});
 
-export { storeProducts };
+});
+export { storeProducts};
